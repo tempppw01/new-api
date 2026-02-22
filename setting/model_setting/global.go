@@ -34,6 +34,7 @@ func (p ChatCompletionsToResponsesPolicy) IsChannelEnabled(channelID int, channe
 
 type GlobalSettings struct {
 	PassThroughRequestEnabled        bool                             `json:"pass_through_request_enabled"`
+	LogUserRequestBodyEnabled        bool                             `json:"log_user_request_body_enabled"`
 	ThinkingModelBlacklist           []string                         `json:"thinking_model_blacklist"`
 	ChatCompletionsToResponsesPolicy ChatCompletionsToResponsesPolicy `json:"chat_completions_to_responses_policy"`
 }
@@ -41,6 +42,7 @@ type GlobalSettings struct {
 // 默认配置
 var defaultOpenaiSettings = GlobalSettings{
 	PassThroughRequestEnabled: false,
+	LogUserRequestBodyEnabled: false,
 	ThinkingModelBlacklist: []string{
 		"moonshotai/kimi-k2-thinking",
 		"kimi-k2-thinking",
@@ -61,6 +63,10 @@ func init() {
 
 func GetGlobalSettings() *GlobalSettings {
 	return &globalSettings
+}
+
+func IsRequestBodyLogEnabled() bool {
+	return globalSettings.LogUserRequestBodyEnabled
 }
 
 // ShouldPreserveThinkingSuffix 判断模型是否配置为保留 thinking/-nothinking/-low/-high/-medium 后缀

@@ -68,6 +68,7 @@ const chatCompletionsToResponsesPolicyAllChannelsExample = JSON.stringify(
 
 const defaultGlobalSettingInputs = {
   'global.pass_through_request_enabled': false,
+  'global.log_user_request_body_enabled': false,
   'global.thinking_model_blacklist': '[]',
   'global.chat_completions_to_responses_policy': '{}',
   'general_setting.ping_interval_enabled': false,
@@ -205,6 +206,24 @@ export default function SettingGlobalModel(props) {
                 />
               </Col>
             </Row>
+            <Row>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Switch
+                  label={t('记录用户请求体')}
+                  field={'global.log_user_request_body_enabled'}
+                  onChange={(value) =>
+                    setInputs({
+                      ...inputs,
+                      'global.log_user_request_body_enabled': value,
+                    })
+                  }
+                  extraText={t(
+                    '开启后将记录用户请求体到日志，仅建议用于临时排障，可能包含敏感信息',
+                  )}
+                />
+              </Col>
+            </Row>
+
             <Row>
               <Col span={24}>
                 <Form.TextArea
