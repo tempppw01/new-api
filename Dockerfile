@@ -31,7 +31,16 @@ ENV GOEXPERIMENT=greenteagc
 WORKDIR /build
 
 ADD go.mod go.sum ./
-RUN go mod download
+RUN set -eux; \
+    for attempt in 1 2 3 4 5; do \
+        if go mod download; then \
+            exit 0; \
+        fi; \
+        if [ "$attempt" = "5" ]; then \
+            exit 1; \
+        fi; \
+        sleep $((attempt * 10)); \
+    done
 
 COPY . .
 COPY --from=builder /build/web/default/dist ./web/default/dist
