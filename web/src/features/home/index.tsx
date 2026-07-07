@@ -16,18 +16,32 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useCallback, useEffect, useRef } from 'react'
+import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
 import { Footer } from '@/components/layout/components/footer'
 import { RichContent } from '@/components/rich-content'
+import { Input } from '@/components/ui/input'
 import { useTheme } from '@/context/theme-provider'
 import { isLikelyHtml } from '@/lib/content-format'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { CTA, Features, Hero, HowItWorks, Stats } from './components'
 import { useHomePageContent } from './hooks'
+
+const HOME_GATE_KEY = 'default_home_gate_passed_v1'
+const HOME_GATE_PASSWORD = 'hello'
+
+function hasHomeGateAccess() {
+  if (typeof window === 'undefined') return false
+  return window.sessionStorage.getItem(HOME_GATE_KEY) === 'true'
+}
+
+function grantHomeGateAccess() {
+  if (typeof window === 'undefined') return
+  window.sessionStorage.setItem(HOME_GATE_KEY, 'true')
+}
 
 export function Home() {
   const { i18n, t } = useTranslation()
@@ -36,6 +50,9 @@ export function Home() {
   const { auth } = useAuthStore()
   const isAuthenticated = !!auth.user
   const { content, isLoaded, isUrl } = useHomePageContent()
+  const [isGatePassed, setIsGatePassed] = useState(hasHomeGateAccess)
+  const [gatePassword, setGatePassword] = useState('')
+  const [gateError, setGateError] = useState(false)
 
   const syncIframePreferences = useCallback(() => {
     try {
@@ -57,6 +74,40 @@ export function Home() {
       syncIframePreferences()
     }
   }, [isUrl, syncIframePreferences])
+
+  const handleGateSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (gatePassword !== HOME_GATE_PASSWORD) {
+      setGateError(true)
+      return
+    }
+    grantHomeGateAccess()
+    setIsGatePassed(true)
+  }
+
+  if (!isGatePassed) {
+    return (
+      <PublicLayout showMainContainer={false}>
+        <main className='bg-background flex min-h-screen items-center justify-center px-4'>
+          <form className='w-full max-w-sm' onSubmit={handleGateSubmit}>
+            <Input
+              autoFocus
+              type='password'
+              value={gatePassword}
+              placeholder={t('Password')}
+              aria-label={t('Password')}
+              aria-invalid={gateError}
+              className='h-11 px-3 text-base'
+              onChange={(event) => {
+                setGatePassword(event.target.value)
+                setGateError(false)
+              }}
+            />
+          </form>
+        </main>
+      </PublicLayout>
+    )
+  }
 
   if (!isLoaded) {
     return (
