@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import HeaderBar from './headerbar';
-import { Layout } from '@douyinfe/semi-ui';
+import { Input, Layout } from '@douyinfe/semi-ui';
 import SiderBar from './SiderBar';
 import App from '../../App';
 import FooterBar from './Footer';
@@ -41,6 +41,18 @@ import { StatusContext } from '../../context/Status';
 import { useLocation } from 'react-router-dom';
 import { normalizeLanguage } from '../../i18n/language';
 const { Sider, Content, Header } = Layout;
+const LOGIN_GATE_KEY = 'classic_login_gate_passed_v1';
+const LOGIN_GATE_PASSWORD = 'hello';
+
+function hasLoginGateAccess() {
+  if (typeof window === 'undefined') return false;
+  return window.sessionStorage.getItem(LOGIN_GATE_KEY) === 'true';
+}
+
+function grantLoginGateAccess() {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.setItem(LOGIN_GATE_KEY, 'true');
+}
 
 const PageLayout = () => {
   const [userState, userDispatch] = useContext(UserContext);
@@ -48,8 +60,12 @@ const PageLayout = () => {
   const isMobile = useIsMobile();
   const [collapsed, , setCollapsed] = useSidebarCollapsed();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { i18n } = useTranslation();
+  const [isGatePassed, setIsGatePassed] = useState(hasLoginGateAccess);
+  const [gatePassword, setGatePassword] = useState('');
+  const [gateError, setGateError] = useState(false);
+  const { i18n, t } = useTranslation();
   const location = useLocation();
+  const isHomeRoute = location.pathname === '/';
 
   const cardProPages = [
     '/console/channel',
@@ -145,6 +161,50 @@ const PageLayout = () => {
       }
     }
   }, [i18n, userState?.user?.setting]);
+
+  const handleGateSubmit = (event) => {
+    event.preventDefault();
+    if (gatePassword !== LOGIN_GATE_PASSWORD) {
+      setGateError(true);
+      return;
+    }
+    grantLoginGateAccess();
+    setIsGatePassed(true);
+  };
+
+  if (isHomeRoute && !isGatePassed) {
+    return (
+      <Layout
+        className='app-layout'
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0 16px',
+        }}
+      >
+        <form
+          onSubmit={handleGateSubmit}
+          style={{ width: '100%', maxWidth: 400 }}
+        >
+          <Input
+            autoFocus
+            type='password'
+            value={gatePassword}
+            placeholder={t('密码')}
+            aria-label={t('密码')}
+            className={gateError ? '!border-red-500' : ''}
+            onChange={(value) => {
+              setGatePassword(value);
+              setGateError(false);
+            }}
+          />
+        </form>
+        <ToastContainer />
+      </Layout>
+    );
+  }
 
   return (
     <Layout
