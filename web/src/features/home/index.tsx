@@ -75,6 +75,17 @@ export function Home() {
     }
   }, [isUrl, syncIframePreferences])
 
+  useEffect(() => {
+    if (isGatePassed) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isGatePassed])
+
   const handleGateSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (gatePassword !== HOME_GATE_PASSWORD) {
@@ -87,25 +98,23 @@ export function Home() {
 
   if (!isGatePassed) {
     return (
-      <PublicLayout showMainContainer={false}>
-        <main className='bg-background flex min-h-screen items-center justify-center px-4'>
-          <form className='w-full max-w-sm' onSubmit={handleGateSubmit}>
-            <Input
-              autoFocus
-              type='password'
-              value={gatePassword}
-              placeholder={t('Password')}
-              aria-label={t('Password')}
-              aria-invalid={gateError}
-              className='h-11 px-3 text-base'
-              onChange={(event) => {
-                setGatePassword(event.target.value)
-                setGateError(false)
-              }}
-            />
-          </form>
-        </main>
-      </PublicLayout>
+      <main className='bg-background fixed inset-0 z-[100] flex min-h-svh items-center justify-center px-4'>
+        <form className='w-full max-w-sm' onSubmit={handleGateSubmit}>
+          <Input
+            autoFocus
+            type='password'
+            value={gatePassword}
+            placeholder={t('Password')}
+            aria-label={t('Password')}
+            aria-invalid={gateError}
+            className='h-11 px-3 text-base'
+            onChange={(event) => {
+              setGatePassword(event.target.value)
+              setGateError(false)
+            }}
+          />
+        </form>
+      </main>
     )
   }
 
